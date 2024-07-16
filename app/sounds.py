@@ -16,7 +16,7 @@ def play_alarm():
         print(error)
         print('\a') #This should work on all platforms and play a "bell" sound as long as the terminal isn't muted
 
-def mute_sound():
+def ask_to_enable_sound():
     try:
         is_okay = input(SOUND_PERMISSION).lower().strip() == "y"
         if is_okay:

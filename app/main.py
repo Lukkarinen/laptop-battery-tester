@@ -1,8 +1,11 @@
-import sounds, power, clock
+from sounds import *
+from power import *
+from clock import *
 
 #region Terminal
 DISCHARGING = "Discharging"
 CHARGING = "Charging"
+BATTERY_ERROR = "Error. Can't read battery state."
 BATTERY_STATUS = "%s, Battery charge: %s, %s. %s"
 MESSAGE_RESET = ""
 CONNECT_CHARGER = "Please plug the charger in."
@@ -22,11 +25,16 @@ def connect_charger():
     return CONNECT_CHARGER
 
 def print_status(message_text):
-    timestamp = clock.format_time(clock.current_time())
-    charge_percent = power.check_battery_charge()
     power_state = DISCHARGING
-    if power.is_power_cable_connected():
+    timestamp = format_time(current_time())
+    charge_percent = check_battery_charge()
+
+    power_cable_is_connected = is_power_cable_connected()
+    if power_cable_is_connected:
         power_state = CHARGING
+    elif power_cable_is_connected is None:
+        power_state = BATTERY_ERROR
+
     print(BATTERY_STATUS % (timestamp, charge_percent, power_state, message_text))
 #endregion
 
@@ -38,17 +46,17 @@ TEST_END = 4
 PRESS_ENTER = "Press Enter to end program..."
 
 def main():
-    sound_on = sounds.mute_sound()
+    sound_on = ask_to_enable_sound()
     stage = FIRST_CHARGE
-    last_alarm = clock.current_time()
+    last_alarm = current_time()
 
     while stage != TEST_END:
-        frame_start = clock.current_time()
+        frame_start = current_time()
         status_message = status_reset()
 
-        battery_full = power.is_battery_full()
-        battery_empty = power.is_battery_empty()
-        power_cable_connected = power.is_power_cable_connected()
+        battery_full = is_battery_full()
+        battery_empty = is_battery_empty()
+        power_cable_connected = is_power_cable_connected()
 
         if stage == FIRST_CHARGE or stage == SECOND_CHARGE:
             if battery_full:
@@ -56,9 +64,9 @@ def main():
                 stage += 1
             elif not power_cable_connected and power_cable_connected is not None:
                 status_message = connect_charger()
-                if sound_on and clock.has_it_been_long_enough(last_alarm):
-                    sounds.play_alarm()
-                    last_alarm = clock.current_time()
+                if sound_on and has_it_been_long_enough(last_alarm):
+                    play_alarm()
+                    last_alarm = current_time()
 
         elif stage == DISCHARGE:
             if battery_empty:
@@ -68,10 +76,10 @@ def main():
                 status_message = disconnect_charger()
         
         print_status(status_message)
-        clock.sleep(frame_start)
+        sleep_until_next_frame(frame_start)
     
     if sound_on:
-        sounds.play_alarm()
+        play_alarm()
 
     input(PRESS_ENTER)
 

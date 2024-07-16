@@ -8,13 +8,11 @@ CHARGER_ERROR_RETURN_VALUE = None #If the battery's metrics can't be read or acc
 def check_battery_charge():
     try:
         charge = psutil.sensors_battery().percent
-    except psutil.AccessDenied as error:
-        print(error)
+    except psutil.AccessDenied:
         return BATTERY_ERROR_RETURN_VALUE
-    if charge is None:
+    except AttributeError:
         return BATTERY_ERROR_RETURN_VALUE
-    else:
-        return charge
+    return charge
     
 def is_battery_full():
     if check_battery_charge() >= BATTERY_HIGH_THRESHOLD:
@@ -34,10 +32,8 @@ def is_battery_empty():
 def is_power_cable_connected():
     try:
         charging = psutil.sensors_battery().power_plugged
-    except psutil.AccessDenied as error:
-        print(error)
+    except psutil.AccessDenied:
         return CHARGER_ERROR_RETURN_VALUE
-    if charging is None:
+    except AttributeError:
         return CHARGER_ERROR_RETURN_VALUE
-    else:
-        return charging
+    return charging

@@ -13,7 +13,7 @@ def format_time(timestamp):
     #Format a time object into a single string that's more suitable for writing into a dumb database or printing into terminal
     return timestamp.strftime(TIMESTAMP_FORMAT)
 
-def sleep(frame_start_time):
+def sleep_until_next_frame(frame_start_time):
     seconds_since_frame_start = (current_time() - frame_start_time).total_seconds()
     if seconds_since_frame_start < REFRESH_RATE:
         sleep_duration = REFRESH_RATE - seconds_since_frame_start
