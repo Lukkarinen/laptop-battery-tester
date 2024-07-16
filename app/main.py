@@ -1,5 +1,5 @@
 #region Imports
-from psutil import sensors_battery, AccessDenied
+import psutil
 import time
 from datetime import datetime
 import playsound
@@ -12,28 +12,28 @@ REFRESH_RATE = 0.33 #Seconds
 BEEP_INTERVAL = 3 #Seconds between alarm beeps
 BACK_TO_THE_FUTURE = "Time difference is negative. Either something went wrong or the user traveled back in time"
 
-def currentTime():
+def current_time():
     return datetime.now()
 
-def formatTime(timestamp):
+def format_time(timestamp):
     #Format a time object into a single string that's more suitable for writing into a dumb database or printing into terminal
     return timestamp.strftime(TIMESTAMP_FORMAT)
 
-def sleep(frameStartTime):
-    secondsSinceFrameStart = (currentTime() - frameStartTime).total_seconds()
-    if secondsSinceFrameStart < REFRESH_RATE:
-        sleepDuration = REFRESH_RATE - secondsSinceFrameStart
-        time.sleep(sleepDuration)
+def sleep(frame_start_time):
+    seconds_since_frame_start = (current_time() - frame_start_time).total_seconds()
+    if seconds_since_frame_start < REFRESH_RATE:
+        sleep_duration = REFRESH_RATE - seconds_since_frame_start
+        time.sleep(sleep_duration)
         return True
     else:
         return False
     
-def hasItBeenLongEnough(lastTime):
-    timeDifference = (currentTime() - lastTime).total_seconds()
-    if timeDifference < 0:
-        logError(BACK_TO_THE_FUTURE)
+def has_it_been_long_enough(last_time):
+    time_difference = (current_time() - last_time).total_seconds()
+    if time_difference < 0:
+        log_error(BACK_TO_THE_FUTURE)
         return False
-    elif timeDifference >= BEEP_INTERVAL:
+    elif time_difference >= BEEP_INTERVAL:
         return True
     else:
         return False
@@ -49,26 +49,26 @@ BATTERY_ACCESS_DENIED_ERROR = "Tried to read battery charge percent, but access 
 CHARGER_ACCESS_DENIED_ERROR = "Tried to read power cable state, but access was denied"
 BATTERY_READ_ERROR = "No battery installed or battery metrics can't be read"
 
-def checkBatteryCharge():
+def check_battery_charge():
     try:
-        charge = sensors_battery().percent
-    except AccessDenied:
-        logError(BATTERY_ACCESS_DENIED_ERROR)
+        charge = psutil.sensors_battery().percent
+    except psutil.AccessDenied:
+        log_error(BATTERY_ACCESS_DENIED_ERROR)
         return BATTERY_ERROR_RETURN_VALUE
     if charge is None:
-        logError(BATTERY_READ_ERROR)
+        log_error(BATTERY_READ_ERROR)
         return BATTERY_ERROR_RETURN_VALUE
     else:
         return charge
     
-def isBatteryFull():
-    if checkBatteryCharge() >= BATTERY_HIGH_THRESHOLD:
+def is_battery_full():
+    if check_battery_charge() >= BATTERY_HIGH_THRESHOLD:
         return True
     else:
         return False
     
-def isBatteryEmpty():
-    charge = checkBatteryCharge()
+def is_battery_empty():
+    charge = check_battery_charge()
     if charge == BATTERY_ERROR_RETURN_VALUE:
         return False
     elif charge <= BATTERY_LOW_THRESHOLD:
@@ -76,14 +76,14 @@ def isBatteryEmpty():
     else:
         return False
 
-def isPowerCableConnected():
+def is_power_cable_connected():
     try:
-        charging = sensors_battery().power_plugged
-    except AccessDenied:
-        logError(CHARGER_ACCESS_DENIED_ERROR)
+        charging = psutil.sensors_battery().power_plugged
+    except psutil.AccessDenied:
+        log_error(CHARGER_ACCESS_DENIED_ERROR)
         return CHARGER_ERROR_RETURN_VALUE
     if charging is None:
-        logError(BATTERY_READ_ERROR)
+        log_error(BATTERY_READ_ERROR)
         return CHARGER_ERROR_RETURN_VALUE
     else:
         return charging
@@ -98,25 +98,25 @@ CONNECT_CHARGER = "Please plug the charger in."
 DISCONNECT_CHARGER = "Please disconnect the charger."
 STAGE_DONE = "Stage %d done."
 
-def stageDone(stageNum):
-    return STAGE_DONE % (stageNum)
+def stage_done(stage_number):
+    return STAGE_DONE % (stage_number)
 
-def statusReset():
+def status_reset():
     return MESSAGE_RESET
 
-def disconnectCharger():
+def disconnect_charger():
     return DISCONNECT_CHARGER
 
-def connectCharger():
+def connect_charger():
     return CONNECT_CHARGER
 
-def printStatus(messageText):
-    timestamp = formatTime(datetime.now())
-    chargePercent = checkBatteryCharge()
-    powerState = DISCHARGING
-    if isPowerCableConnected():
-        powerState = CHARGING
-    print(BATTERY_STATUS % (timestamp, chargePercent, powerState, messageText))
+def print_status(message_text):
+    timestamp = format_time(datetime.now())
+    charge_percent = check_battery_charge()
+    power_state = DISCHARGING
+    if is_power_cable_connected():
+        power_state = CHARGING
+    print(BATTERY_STATUS % (timestamp, charge_percent, power_state, message_text))
 #endregion
 
 #region Sound
@@ -125,21 +125,21 @@ SOUND_FILE_NOT_FOUND = "Sound file not found: %s"
 DEFAULT_SOUND_SETTING = False
 SOUND_PERMISSION = "Do you want the program to play sound when it needs your attention? y/n"
 
-def runningPath():
+def running_path():
     return pathlib.Path(__file__).parent.resolve()
 
-def playAlarm():
-    soundfile = str(runningPath()) + SOUND_FILE
+def play_alarm():
+    soundfile = str(running_path()) + SOUND_FILE
     try:
         playsound.playsound(soundfile)
     except playsound.PlaysoundException:
-        logError(SOUND_FILE_NOT_FOUND % soundfile)
+        log_error(SOUND_FILE_NOT_FOUND % soundfile)
         print('\a')
 
-def setSoundPermission():
+def set_sound_permission():
     try:
-        isOkay = input(SOUND_PERMISSION).lower().strip() == "y"
-        if isOkay:
+        is_okay = input(SOUND_PERMISSION).lower().strip() == "y"
+        if is_okay:
             return True
         else:
             return False
@@ -150,20 +150,20 @@ def setSoundPermission():
 #region Errors
 NO_ERRORS = "There were no errors during the test."
 ERROR_LINE = "%d times %s"
-listOfErrors = {}
+list_of_errors = {}
 
-def logError(errortext):
-    print(errortext)
-    if errortext in listOfErrors:
-        listOfErrors[errortext] = listOfErrors[errortext] +1
+def log_error(error_text):
+    print(error_text)
+    if error_text in list_of_errors:
+        list_of_errors[error_text] = list_of_errors[error_text] +1
     else:
-        listOfErrors.update({errortext : 1})
+        list_of_errors.update({error_text : 1})
 
-def printErrorStatistics():
-    errorListIsNotEmpty = bool(listOfErrors)
-    if errorListIsNotEmpty:
-        for error in listOfErrors:
-            amount = listOfErrors[error]
+def print_error_statistics():
+    error_list_is_not_empty = bool(list_of_errors)
+    if error_list_is_not_empty:
+        for error in list_of_errors:
+            amount = list_of_errors[error]
             print(ERROR_LINE % (amount, error))
     else:
         print(NO_ERRORS)
@@ -177,42 +177,42 @@ TEST_END = 4
 PRESS_ENTER = "Press Enter to end program..."
 
 def main():
-    soundOn = setSoundPermission()
+    sound_on = set_sound_permission()
     stage = FIRST_CHARGE
-    lastAlarm = currentTime()
+    last_alarm = current_time()
 
     while stage != TEST_END:
-        frameStartTime = currentTime()
-        statusMessage = statusReset()
+        frame_start = current_time()
+        status_message = status_reset()
 
-        batteryFull = isBatteryFull()
-        batteryEmpty = isBatteryEmpty()
-        powerCableConnected = isPowerCableConnected()
+        battery_full = is_battery_full()
+        battery_empty = is_battery_empty()
+        power_cable_connected = is_power_cable_connected()
 
         if stage == FIRST_CHARGE or stage == SECOND_CHARGE:
-            if batteryFull:
-                statusMessage = stageDone(stage)
+            if battery_full:
+                status_message = stage_done(stage)
                 stage += 1
-            elif not powerCableConnected and powerCableConnected is not None:
-                statusMessage = connectCharger()
-                if soundOn and hasItBeenLongEnough(lastAlarm):
-                    playAlarm()
-                    lastAlarm = currentTime()
+            elif not power_cable_connected and power_cable_connected is not None:
+                status_message = connect_charger()
+                if sound_on and has_it_been_long_enough(last_alarm):
+                    play_alarm()
+                    last_alarm = current_time()
 
         elif stage == DISCHARGE:
-            if batteryEmpty:
-                statusMessage = stageDone(stage)
+            if battery_empty:
+                status_message = stage_done(stage)
                 stage += 1
-            elif powerCableConnected:
-                statusMessage = disconnectCharger()
+            elif power_cable_connected:
+                status_message = disconnect_charger()
         
-        printStatus(statusMessage)
-        sleep(frameStartTime)
+        print_status(status_message)
+        sleep(frame_start)
     
-    if soundOn:
-        playAlarm()
+    if sound_on:
+        play_alarm()
 
-    printErrorStatistics()
+    print_error_statistics()
     input(PRESS_ENTER)
 
 main()
