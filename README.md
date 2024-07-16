@@ -4,6 +4,6 @@
  Currently does not have proper logging and instead just prints stats to terminal three times per second.
 
  Planned features:
- - logging to file instead of terminal
- - support for automatically cutting power with a custom USB circuit
+ - logging to file
+ - support for automatically cutting power with a custom USB device
  - GUI
