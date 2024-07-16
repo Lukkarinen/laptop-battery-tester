@@ -2,8 +2,8 @@ import pathlib
 import playsound
 
 SOUND_FILE = "\\sound\\beep.mp3"
-DEFAULT_MUTE_SETTING = True
-SOUND_PERMISSION = "Do you want the program to play sound when it needs your attention? y/n"
+DEFAULT_SOUND_SETTING = False
+SOUND_PERMISSION = "Do you want the program to play sound when it needs your attention? y/n "
 
 def running_path():
     return pathlib.Path(__file__).parent.resolve()
@@ -24,4 +24,4 @@ def ask_to_enable_sound():
         else:
             return False
     except:
-        return DEFAULT_MUTE_SETTING
+        return DEFAULT_SOUND_SETTING
