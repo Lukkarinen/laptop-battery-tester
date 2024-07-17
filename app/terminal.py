@@ -37,10 +37,10 @@ class Terminal:
     def input_enter(self):
         input(self.press_enter)
         
-    def print_status(self, timestamp, charge_percent, charging_state, event, stage=1):
+    def print_status(self, timestamp, charge_percent, charging_bool, event, stage=1):
         formatted_timestamp = self.format_timestamp(timestamp)
 
-        charging = self.charging_or_discharging(charging_state)
+        charging = self.charging_or_discharging(charging_bool)
 
         match event:
             case "stage":
