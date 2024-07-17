@@ -1,38 +1,52 @@
 import psutil
 
-BATTERY_HIGH_THRESHOLD = 95 #At or above this percent, the battery is considered full
-BATTERY_LOW_THRESHOLD = 5 #At or below this percent, the battery is considered empty
-BATTERY_ERROR = -1 #If battery charge can't be read, return -1
-CHARGER_ERROR = None #If the battery's metrics can't be read or access to read the battery's state is denied, return None
+class Battery:
+    def __init__(self, 
+                 battery_high_threshold = 95,
+                 battery_low_threshold = 5,
+                 battery_error = -1,
+                 charger_error = None
+                 ):
+        
+        self.battery_high_threshold = battery_high_threshold
+        self.battery_low_threshold = battery_low_threshold
+        self.battery_error = battery_error
+        self.charger_error = charger_error
+        self.full = self.is_full()
+        self.empty = self.is_empty()
+        self.charging = self.is_charging()
+        self.charge = self.check_charge()
 
-def check_battery_charge():
-    try:
-        charge = psutil.sensors_battery().percent
-    except (psutil.AccessDenied, AttributeError) as error:
-        return BATTERY_ERROR
-    if charge is None or charge < 0 or charge > 200:
-        return BATTERY_ERROR
-    else:
-        return charge
+    def check_charge(self):
+        try:
+            charge = psutil.sensors_battery().percent
+        except (psutil.AccessDenied, AttributeError) as error:
+            print(error)
+            return self.battery_error
+        if charge is None or charge < 0 or charge > 110:
+            return self.battery_error
+        else:
+            return charge
     
-def is_battery_full():
-    if check_battery_charge() >= BATTERY_HIGH_THRESHOLD:
-        return True
-    else:
-        return False
+    def is_full(self):
+        if self.check_charge() >= self.battery_high_threshold:
+            return True
+        else:
+            return False
     
-def is_battery_empty():
-    charge = check_battery_charge()
-    if charge == BATTERY_ERROR:
-        return False
-    elif charge <= BATTERY_LOW_THRESHOLD:
-        return True
-    else:
-        return False
+    def is_empty(self):
+        charge = self.check_charge()
+        if charge == self.battery_error:
+            return False
+        elif charge <= self.battery_low_threshold:
+            return True
+        else:
+            return False
 
-def is_power_cable_connected():
-    try:
-        charging = psutil.sensors_battery().power_plugged
-    except (AttributeError, psutil.AccessDenied) as error:
-        return CHARGER_ERROR
-    return charging
+    def is_charging(self):
+        try:
+            charging = psutil.sensors_battery().power_plugged
+        except (AttributeError, psutil.AccessDenied) as error:
+            print(error)
+            return self.charger_error
+        return charging

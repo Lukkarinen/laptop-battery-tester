@@ -1,49 +1,70 @@
-from terminal import *
-from sounds import ask_to_enable_sound, play_alarm
+from terminal import Terminal
+from sounds import Alarm
+from power import Battery
+from datetime import datetime
+import time
+
+def sleep_until_next_frame(frame_start, refresh_rate = 0.1):
+    seconds_since_frame_start = (datetime.now() - frame_start).total_seconds()
+
+    if seconds_since_frame_start < refresh_rate and seconds_since_frame_start > 0:
+        sleep_duration = refresh_rate - seconds_since_frame_start
+        time.sleep(sleep_duration)
+        return True
+    else:
+        return False
 
 FIRST_CHARGE = 1
 DISCHARGE = 2
 SECOND_CHARGE = 3
 TEST_END = 4
 
-PRESS_ENTER = "Press Enter to end program..."
-
 def main():
-    sound_on = ask_to_enable_sound()
+    alarm = Alarm()
+    battery = Battery()
+    terminal = Terminal()
     stage = FIRST_CHARGE
-    last_alarm = current_time()
+
+    alarm.alarm()
 
     while stage != TEST_END:
-        frame_start = current_time()
-        status_message = status_reset()
+        frame_start = datetime.now()
 
-        battery_full = is_battery_full()
-        battery_empty = is_battery_empty()
-        power_cable_connected = is_power_cable_connected()
+        battery.full = battery.is_full()
+        battery.empty = battery.is_empty()
+        battery.charging = battery.is_charging()
+        battery.charge = battery.check_charge()
 
-        if stage == FIRST_CHARGE or stage == SECOND_CHARGE:
-            if battery_full:
-                status_message = stage_done(stage)
-                stage += 1
-            elif not power_cable_connected and power_cable_connected is not None:
-                status_message = connect_charger()
-                if sound_on and has_it_been_long_enough(last_alarm):
-                    play_alarm()
-                    last_alarm = current_time()
+        event = "none"
+
+        if battery.charging is None or battery.charge == -1:
+            event = "error"
+            alarm.alarm()
+
+        elif stage == FIRST_CHARGE or stage == SECOND_CHARGE:
+            if battery.full:
+                event = "stage"
+            elif not battery.charging and battery.charging is not None:
+                event = "connect"
+                alarm.alarm()
 
         elif stage == DISCHARGE:
-            if battery_empty:
-                status_message = stage_done(stage)
-                stage += 1
-            elif power_cable_connected:
-                status_message = disconnect_charger()
-        
-        print_status(status_message)
+            if battery.empty:
+                event = "stage"
+            elif battery.charging:
+                event = "disconnect"
+                alarm.alarm()
+    
+        terminal.print_status(datetime.now(), battery.charge, battery.charging, event, stage)
+
+        if event == "stage":
+            stage += 1
+
         sleep_until_next_frame(frame_start)
     
-    if sound_on:
-        play_alarm()
 
-    input(PRESS_ENTER)
+    alarm.alarm()
+    terminal.input_enter()
 
-main()
+if __name__ == '__main__':
+    main()
