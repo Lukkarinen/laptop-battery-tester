@@ -64,7 +64,7 @@ def main():
     
 
     alarm.alarm()
-    terminal.input_enter()
+    terminal.press_enter()
 
 if __name__ == '__main__':
     main()

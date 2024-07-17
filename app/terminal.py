@@ -8,7 +8,7 @@ class Terminal:
                  connect_charger = "Please plug the charger in",
                  disconnect_charger = "Please disconnect the charger",
                  stage_done = "Stage %s done",
-                 press_enter = "Press Enter to end the program..."
+                 ask_to_press_enter = "Press Enter to end the program..."
                  ):
         
         self.timestamp_format = timestamp_format
@@ -19,7 +19,7 @@ class Terminal:
         self.connect_charger = connect_charger
         self.disconnect_charger = disconnect_charger
         self.stage_done = stage_done
-        self.press_enter = press_enter
+        self.ask_to_press_enter = ask_to_press_enter
 
     def format_timestamp(self, timestamp):
         #Format a time object into a single string that's more suitable for writing into a dumb database or printing into terminal
@@ -34,8 +34,8 @@ class Terminal:
         else:
             return self.discharging
     
-    def input_enter(self):
-        input(self.press_enter)
+    def press_enter(self):
+        input(self.ask_to_press_enter)
         
     def print_status(self, timestamp, charge_percent, charging_bool, event, stage=1):
         formatted_timestamp = self.format_timestamp(timestamp)
