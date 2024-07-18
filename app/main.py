@@ -1,7 +1,7 @@
-from terminal import Terminal
 from sounds import Alarm
 from power import Battery
 from datetime import datetime
+from log import ExcelFile, Terminal
 import time
 
 def sleep_until_next_frame(frame_start, refresh_rate = 0.1):
@@ -23,6 +23,7 @@ def main():
     alarm = Alarm()
     battery = Battery()
     terminal = Terminal()
+    file = ExcelFile()
     stage = FIRST_CHARGE
 
     alarm.alarm()
@@ -54,15 +55,17 @@ def main():
             elif battery.charging:
                 event = "disconnect"
                 alarm.alarm()
-    
-        terminal.print_status(datetime.now(), battery.charge, battery.charging, event, stage)
-
-        if event == "stage":
+            
+        if event == "error" or event == "disconnect" or event == "connect":
+            terminal.print_status(frame_start, event)
+        elif event == "stage":
+            terminal.print_status(frame_start, event, stage)
             stage += 1
 
+        file.write_to_datasheet(file.next_row(), frame_start, battery.charge, battery.charging)
         sleep_until_next_frame(frame_start)
     
-
+    file.save_file()
     alarm.alarm()
     terminal.press_enter()
 
